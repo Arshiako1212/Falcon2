@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>پنل مدیریت</title>
+<meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0e1f;--card:#171833;--card2:#1e2045;--line:#2b2d5c;--tx:#eef0ff;--mut:#9ea3d4;--pri:#7c5cff;--ok:#2ed39b;--warn:#ffb020;--bad:#ff5c7a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Vazirmatn,Tahoma,sans-serif;font-size:14px}
+button,input,select{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.top h1{font-size:16px;margin:0;margin-inline-end:auto}
+.nav button{background:none;border:0;padding:8px 14px;border-radius:10px;cursor:pointer;color:var(--mut);transition:.2s}
+.nav button.on,.nav button:hover{background:var(--card2);color:var(--tx)}
+main{padding:16px;max-width:1200px;margin:auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;animation:up .4s both}
+.stat b{display:block;font-size:22px;margin-top:4px}
+.stat span{color:var(--mut);font-size:12px}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tools{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+input,select{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;outline:none}
+input:focus{border-color:var(--pri)}
+.btn{background:var(--pri);border:0;border-radius:10px;padding:9px 16px;cursor:pointer;color:#fff}
+.btn.ghost{background:var(--card2)}
+.btn.bad{background:var(--bad)}
+.tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{padding:10px 12px;text-align:start;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mut);font-weight:600;font-size:12px}
+tr.click{cursor:pointer}tr.click:hover{background:var(--card2)}
+.chip{padding:2px 9px;border-radius:99px;font-size:12px;background:var(--card2)}
+.chip.ok{background:#12372d;color:var(--ok)}.chip.warn{background:#3d2f0c;color:var(--warn)}.chip.bad{background:#3d1520;color:var(--bad)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.panel h3{margin:0 0 10px;font-size:14px;color:var(--mut)}
+.msg{padding:8px 10px;border-radius:10px;background:var(--card2);margin-bottom:6px}
+.msg small{color:var(--mut);display:block;margin-bottom:2px}
+.msg p{margin:0;white-space:pre-wrap;word-break:break-word}
+.login{max-width:340px;margin:12vh auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;display:grid;gap:10px}
+.login h2{margin:0 0 6px}
+.err{color:var(--bad);min-height:18px;font-size:13px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:800px){.row2{grid-template-columns:1fr}}
+.notice{background:#2a2310;border:1px solid #5b4a14;color:#ffd978;border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:13px}
+.muted{color:var(--mut)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fa=n=>Number(n||0).toLocaleString('fa-IR');
+const money=n=>fa(n)+' تومان';
+const dt=d=>d?new Date(d).toLocaleString('fa-IR',{dateStyle:'short',timeStyle:'short'}):'—';
+const ST={unpaid:['پرداخت نشده','bad'],pending:['منتظر تأیید','warn'],paid:['پرداخت شد','ok']};
+const chip=s=>`<span class="chip ${ST[s][1]}">${ST[s][0]}</span>`;
+
+async function A(path,opt={}){
+  const r=await fetch('/admin/api'+path,{method:opt.method||'GET',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(sessionStorage.getItem('at')||'')},body:opt.body?JSON.stringify(opt.body):undefined});
+  const d=await r.json().catch(()=>({}));
+  if(r.status===401&&sessionStorage.getItem('at')){sessionStorage.removeItem('at');login();throw new Error('auth');}
+  if(!r.ok)throw new Error(d.error||'خطا');
+  return d;
+}
+
+function login(msg=''){
+  $('#root').innerHTML=`<form class="login" id="lf"><h2>ورود مدیر</h2>
+  <input name="username" placeholder="نام کاربری" autocomplete="username" required>
+  <input name="password" type="password" placeholder="رمز عبور" autocomplete="current-password" required>
+  <div class="err" id="le">${esc(msg)}</div><button class="btn">ورود</button></form>`;
+  $('#lf').onsubmit=async e=>{e.preventDefault();const f=e.target;
+    try{const r=await A('/login',{method:'POST',body:{username:f.username.value,password:f.password.value}});sessionStorage.setItem('at',r.token);shell();}
+    catch(err){$('#le').textContent=err.message;}};
+}
+
+let tab='dash';
+function shell(){
+  $('#root').innerHTML=`<div class="top"><h1>🛠 پنل مدیریت</h1><div class="nav">
+  ${[['dash','داشبورد'],['users','کاربران'],['groups','گروه‌ها'],['msgs','پیام‌ها']].map(([k,t])=>`<button data-t="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}
+  </div><button class="btn ghost" id="out">خروج</button></div><main id="main"></main>`;
+  document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;shell();});
+  $('#out').onclick=()=>{sessionStorage.removeItem('at');login();};
+  ({dash,users,groups,msgs})[tab]();
+}
+const main=()=>$('#main');
+const fail=e=>{if(e.message!=='auth')main().innerHTML=`<div class="panel err">${esc(e.message)}</div>`;};
+
+async function dash(){
+  try{const s=await A('/stats');
+  const c=[['کاربران',fa(s.users)],['فعال در ۲۴ ساعت',fa(s.active_today)],['گروه‌ها',fa(s.groups)],['پیام‌ها',fa(s.messages)],['هزینه‌ها',fa(s.expenses)],
+   ['پرداخت‌نشده',money(s.unpaid)],['منتظر تأیید',money(s.pending)],['پرداخت‌شده',money(s.paid)]];
+  main().innerHTML=`<div class="cards">${c.map(([a,b],i)=>`<div class="stat" style="animation-delay:${i*50}ms"><span>${a}</span><b>${b}</b></div>`).join('')}</div>`;}catch(e){fail(e)}
+}
+
+async function users(){
+  try{const {users}=await A('/users');
+  main().innerHTML=`<div class="tools"><input id="f" placeholder="جستجو: نام، آیدی یا شماره"></div>
+  <div class="tw"><table><thead><tr><th>نام</th><th>آیدی</th><th>شماره</th><th>گروه</th><th>پیام</th><th>بدهکار</th><th>پرداخت‌شده</th><th>آخرین بازدید</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>`;
+  const draw=()=>{const f=$('#f').value.trim().toLowerCase();
+    $('#tb').innerHTML=users.filter(u=>!f||(u.display_name+u.username+(u.phone||'')).toLowerCase().includes(f)).map(u=>`<tr class="click" data-id="${u.id}">
+    <td>${esc(u.display_name)}</td><td dir="ltr">@${esc(u.username)}</td><td dir="ltr">${esc(u.phone||'—')}</td><td>${fa(u.groups)}</td><td>${fa(u.messages)}</td>
+    <td>${u.owed>0?`<span class="chip bad">${money(u.owed)}</span>`:'—'}</td><td>${money(u.paid)}</td><td>${dt(u.last_seen)}</td><td>${u.is_blocked?'<span class="chip bad">مسدود</span>':''}</td></tr>`).join('')||'<tr><td colspan="9" class="muted">کاربری نیست</td></tr>';
+    document.querySelectorAll('tr.click').forEach(r=>r.onclick=()=>userDetail(r.dataset.id));};
+  $('#f').oninput=draw;draw();}catch(e){fail(e)}
+}
+
+const msgHTML=(m,me)=>`<div class="msg"><small>${m.group_id?`گروه «${esc(m.group_name)}» — ${esc(m.from_name)}`:`${esc(m.from_name)} ← ${esc(m.to_name)}`} · ${dt(m.created_at)}</small><p>${esc(m.body)}</p></div>`;
+
+async function userDetail(id){
+  try{const d=await A('/users/'+id);const u=d.user;
+  main().innerHTML=`<div class="tools"><button class="btn ghost" id="bk">→ بازگشت</button>
+   <button class="btn ${u.is_blocked?'':'bad'}" id="blk">${u.is_blocked?'رفع مسدودی':'مسدود کردن'}</button></div>
+  <div class="panel"><h3>اطلاعات</h3><b>${esc(u.display_name)}</b> <span class="muted" dir="ltr">@${esc(u.username)}</span><br>
+   <span class="muted">شماره:</span> <span dir="ltr">${esc(u.phone||'—')}</span> · <span class="muted">عضویت:</span> ${dt(u.created_at)} · <span class="muted">آخرین بازدید:</span> ${dt(u.last_seen)}</div>
+  <div class="row2"><div class="panel"><h3>گروه‌ها</h3>${d.groups.map(g=>`${esc(g.name)} ${g.role==='treasurer'?'<span class="chip">مادر خرج</span>':''}`).join('<br>')||'<span class="muted">—</span>'}</div>
+  <div class="panel"><h3>سهم‌ها و بدهی‌ها</h3><div class="tw"><table><thead><tr><th>بابت</th><th>گروه</th><th>مبلغ</th><th>وضعیت</th></tr></thead><tbody>
+  ${d.shares.map(s=>`<tr><td>${esc(s.title)}</td><td>${esc(s.group_name)}</td><td>${money(s.amount)}</td><td>${chip(s.status)}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">—</td></tr>'}</tbody></table></div></div></div>
+  <div class="panel"><h3>پیام‌ها (۲۰۰ مورد آخر)</h3>${d.messages.map(msgHTML).join('')||'<span class="muted">—</span>'}</div>`;
+  $('#bk').onclick=users;
+  $('#blk').onclick=async()=>{await A('/users/'+id+'/block',{method:'POST'});userDetail(id);};}catch(e){fail(e)}
+}
+
+async function groups(){
+  try{const {groups}=await A('/groups');
+  main().innerHTML=`<div class="tw"><table><thead><tr><th>گروه</th><th>مادر خرج</th><th>اعضا</th><th>هزینه‌ها</th><th>پیام‌ها</th><th>بدهی باز</th><th>ساخته‌شده</th></tr></thead><tbody>
+  ${groups.map(g=>`<tr class="click" data-id="${g.id}"><td>${esc(g.name)}</td><td>${esc(g.treasurer||'—')}</td><td>${fa(g.members)}</td><td>${fa(g.expenses)}</td><td>${fa(g.messages)}</td><td>${g.owed>0?`<span class="chip bad">${money(g.owed)}</span>`:'—'}</td><td>${dt(g.created_at)}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">گروهی نیست</td></tr>'}</tbody></table></div>`;
+  document.querySelectorAll('tr.click').forEach(r=>r.onclick=()=>groupDetail(r.dataset.id));}catch(e){fail(e)}
+}
+
+async function groupDetail(id){
+  try{const d=await A('/groups/'+id);
+  main().innerHTML=`<div class="tools"><button class="btn ghost" id="bk">→ بازگشت</button></div>
+  <div class="panel"><h3>گروه</h3><b>${esc(d.group.name)}</b> <span class="muted">کد دعوت:</span> <span dir="ltr">${esc(d.group.invite_code)}</span></div>
+  <div class="row2"><div class="panel"><h3>اعضا</h3><div class="tw"><table><thead><tr><th>نام</th><th>آیدی</th><th>بدهی</th></tr></thead><tbody>
+  ${d.members.map(m=>`<tr class="click" data-id="${m.id}"><td>${esc(m.display_name)} ${m.role==='treasurer'?'<span class="chip">مادر خرج</span>':''}</td><td dir="ltr">@${esc(m.username)}</td><td>${m.owed>0?`<span class="chip bad">${money(m.owed)}</span>`:'—'}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="panel"><h3>هزینه‌ها</h3>${d.expenses.map(e=>`<div class="msg"><small>${dt(e.created_at)}</small><b>${esc(e.title)}</b> — ${money(e.total)}<br>
+   ${(e.shares||[]).map(s=>`<span class="muted">${esc(s.name)}: ${money(s.amount)}</span> ${chip(s.status)}`).join('<br>')}</div>`).join('')||'<span class="muted">—</span>'}</div></div>
+  <div class="panel"><h3>پیام‌های گروه</h3>${d.messages.map(msgHTML).join('')||'<span class="muted">—</span>'}</div>`;
+  $('#bk').onclick=groups;
+  document.querySelectorAll('tr.click').forEach(r=>r.onclick=()=>userDetail(r.dataset.id));}catch(e){fail(e)}
+}
+
+async function msgs(){
+  main().innerHTML=`<div class="notice">پیام‌های کاربران برای مدیر قابل مشاهده است و کاربران هنگام ثبت‌نام از این موضوع مطلع می‌شوند. از این دسترسی فقط برای رسیدگی به سوءاستفاده و مشکلات گروه استفاده کنید.</div>
+  <div class="tools"><select id="ty"><option value="all">همه</option><option value="dm">پیام‌های خصوصی</option><option value="group">گروه‌ها</option></select>
+  <input id="tx" placeholder="جستجو در متن پیام‌ها"><button class="btn" id="go">جستجو</button></div><div id="out"></div>`;
+  const run=async()=>{try{const d=await A('/messages?type='+$('#ty').value+'&text='+encodeURIComponent($('#tx').value));
+    $('#out').innerHTML=`<div class="panel">${d.messages.map(msgHTML).join('')||'<span class="muted">پیامی نیست</span>'}</div>`;}catch(e){fail(e)}};
+  $('#go').onclick=run;$('#ty').onchange=run;$('#tx').onkeydown=e=>{if(e.key==='Enter')run();};run();
+}
+
+sessionStorage.getItem('at')?shell():login();
+</script>
+</body>
+</html>
