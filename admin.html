@@ -98,11 +98,11 @@ async function dash(){
 
 async function users(){
   try{const {users}=await A('/users');
-  main().innerHTML=`<div class="tools"><input id="f" placeholder="جستجو: نام، آیدی یا شماره"></div>
-  <div class="tw"><table><thead><tr><th>نام</th><th>آیدی</th><th>شماره</th><th>گروه</th><th>پیام</th><th>بدهکار</th><th>پرداخت‌شده</th><th>آخرین بازدید</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>`;
+  main().innerHTML=`<div class="tools"><input id="f" placeholder="جستجو: نام یا آیدی"></div>
+  <div class="tw"><table><thead><tr><th>نام</th><th>آیدی</th><th>گروه</th><th>پیام</th><th>بدهکار</th><th>پرداخت‌شده</th><th>آخرین بازدید</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>`;
   const draw=()=>{const f=$('#f').value.trim().toLowerCase();
-    $('#tb').innerHTML=users.filter(u=>!f||(u.display_name+u.username+(u.phone||'')).toLowerCase().includes(f)).map(u=>`<tr class="click" data-id="${u.id}">
-    <td>${esc(u.display_name)}</td><td dir="ltr">@${esc(u.username)}</td><td dir="ltr">${esc(u.phone||'—')}</td><td>${fa(u.groups)}</td><td>${fa(u.messages)}</td>
+    $('#tb').innerHTML=users.filter(u=>!f||(u.display_name+u.username).toLowerCase().includes(f)).map(u=>`<tr class="click" data-id="${u.id}">
+    <td>${esc(u.display_name)}</td><td dir="ltr">@${esc(u.username)}</td><td>${fa(u.groups)}</td><td>${fa(u.messages)}</td>
     <td>${u.owed>0?`<span class="chip bad">${money(u.owed)}</span>`:'—'}</td><td>${money(u.paid)}</td><td>${dt(u.last_seen)}</td><td>${u.is_blocked?'<span class="chip bad">مسدود</span>':''}</td></tr>`).join('')||'<tr><td colspan="9" class="muted">کاربری نیست</td></tr>';
     document.querySelectorAll('tr.click').forEach(r=>r.onclick=()=>userDetail(r.dataset.id));};
   $('#f').oninput=draw;draw();}catch(e){fail(e)}
@@ -115,7 +115,7 @@ async function userDetail(id){
   main().innerHTML=`<div class="tools"><button class="btn ghost" id="bk">→ بازگشت</button>
    <button class="btn ${u.is_blocked?'':'bad'}" id="blk">${u.is_blocked?'رفع مسدودی':'مسدود کردن'}</button></div>
   <div class="panel"><h3>اطلاعات</h3><b>${esc(u.display_name)}</b> <span class="muted" dir="ltr">@${esc(u.username)}</span><br>
-   <span class="muted">شماره:</span> <span dir="ltr">${esc(u.phone||'—')}</span> · <span class="muted">عضویت:</span> ${dt(u.created_at)} · <span class="muted">آخرین بازدید:</span> ${dt(u.last_seen)}</div>
+   <span class="muted">عضویت:</span> ${dt(u.created_at)} · <span class="muted">آخرین بازدید:</span> ${dt(u.last_seen)}</div>
   <div class="row2"><div class="panel"><h3>گروه‌ها</h3>${d.groups.map(g=>`${esc(g.name)} ${g.role==='treasurer'?'<span class="chip">مادر خرج</span>':''}`).join('<br>')||'<span class="muted">—</span>'}</div>
   <div class="panel"><h3>سهم‌ها و بدهی‌ها</h3><div class="tw"><table><thead><tr><th>بابت</th><th>گروه</th><th>مبلغ</th><th>وضعیت</th></tr></thead><tbody>
   ${d.shares.map(s=>`<tr><td>${esc(s.title)}</td><td>${esc(s.group_name)}</td><td>${money(s.amount)}</td><td>${chip(s.status)}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">—</td></tr>'}</tbody></table></div></div></div>

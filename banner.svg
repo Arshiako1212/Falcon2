@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300" role="img" aria-label="Dorm Hub">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d0e1f"/><stop offset="1" stop-color="#25206b"/>
+    </linearGradient>
+    <linearGradient id="ttl" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7c5cff"><animate attributeName="stop-color" values="#7c5cff;#00c2ff;#ff5c9a;#7c5cff" dur="8s" repeatCount="indefinite"/></stop>
+      <stop offset="1" stop-color="#00c2ff"><animate attributeName="stop-color" values="#00c2ff;#ff5c9a;#7c5cff;#00c2ff" dur="8s" repeatCount="indefinite"/></stop>
+    </linearGradient>
+    <linearGradient id="roof" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5c9a"/><stop offset="1" stop-color="#7c5cff"/></linearGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="28"/></filter>
+    <clipPath id="c"><rect width="900" height="300" rx="22"/></clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+    <rect width="900" height="300" fill="url(#bg)"/>
+    <!-- glowing blobs -->
+    <g filter="url(#blur)" opacity=".55">
+      <circle cx="140" cy="70" r="70" fill="#7c5cff"><animate attributeName="cx" values="140;260;140" dur="9s" repeatCount="indefinite"/><animate attributeName="cy" values="70;130;70" dur="7s" repeatCount="indefinite"/></circle>
+      <circle cx="760" cy="90" r="80" fill="#00a8e8"><animate attributeName="cx" values="760;640;760" dur="10s" repeatCount="indefinite"/><animate attributeName="cy" values="90;40;90" dur="8s" repeatCount="indefinite"/></circle>
+      <circle cx="480" cy="270" r="70" fill="#ff5c9a"><animate attributeName="cx" values="480;560;480" dur="11s" repeatCount="indefinite"/></circle>
+    </g>
+    <!-- twinkling stars -->
+    <g fill="#fff">
+      <circle cx="60" cy="40" r="2"><animate attributeName="opacity" values="1;.1;1" dur="2.4s" repeatCount="indefinite"/></circle>
+      <circle cx="210" cy="190" r="1.6"><animate attributeName="opacity" values=".1;1;.1" dur="3.1s" repeatCount="indefinite"/></circle>
+      <circle cx="420" cy="36" r="2"><animate attributeName="opacity" values="1;.1;1" dur="2.9s" repeatCount="indefinite"/></circle>
+      <circle cx="610" cy="200" r="1.8"><animate attributeName="opacity" values=".2;1;.2" dur="2.2s" repeatCount="indefinite"/></circle>
+      <circle cx="840" cy="50" r="2"><animate attributeName="opacity" values="1;.1;1" dur="3.4s" repeatCount="indefinite"/></circle>
+      <circle cx="800" cy="210" r="1.5"><animate attributeName="opacity" values=".1;1;.1" dur="2.7s" repeatCount="indefinite"/></circle>
+      <circle cx="330" cy="120" r="1.4"><animate attributeName="opacity" values="1;.2;1" dur="3.8s" repeatCount="indefinite"/></circle>
+    </g>
+    <!-- waves -->
+    <g>
+      <path d="M0 250 Q75 225 150 250 T300 250 T450 250 T600 250 T750 250 T900 250 T1050 250 T1200 250 V300 H0Z" fill="#7c5cff" opacity=".35">
+        <animateTransform attributeName="transform" type="translate" values="0 0;-300 0" dur="9s" repeatCount="indefinite"/></path>
+      <path d="M0 262 Q75 242 150 262 T300 262 T450 262 T600 262 T750 262 T900 262 T1050 262 T1200 262 V300 H0Z" fill="#00a8e8" opacity=".35">
+        <animateTransform attributeName="transform" type="translate" values="-300 0;0 0" dur="7s" repeatCount="indefinite"/></path>
+      <path d="M0 276 Q75 262 150 276 T300 276 T450 276 T600 276 T750 276 T900 276 T1050 276 T1200 276 V300 H0Z" fill="#ff5c9a" opacity=".3">
+        <animateTransform attributeName="transform" type="translate" values="0 0;-300 0" dur="5s" repeatCount="indefinite"/></path>
+    </g>
+    <!-- house (floating) -->
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="0 0;0 -10;0 0" dur="3.6s" repeatCount="indefinite"/>
+      <ellipse cx="150" cy="228" rx="52" ry="7" fill="#000" opacity=".3"><animate attributeName="rx" values="52;42;52" dur="3.6s" repeatCount="indefinite"/></ellipse>
+      <rect x="108" y="130" width="84" height="76" rx="6" fill="#f4f3ff"/>
+      <path d="M96 138 L150 86 L204 138Z" fill="url(#roof)"/>
+      <rect x="138" y="166" width="24" height="40" rx="4" fill="#7c5cff"/>
+      <rect x="118" y="142" width="18" height="16" rx="3" fill="#00a8e8"><animate attributeName="fill" values="#00a8e8;#ffd86b;#00a8e8" dur="4s" repeatCount="indefinite"/></rect>
+      <rect x="164" y="142" width="18" height="16" rx="3" fill="#ffd86b"><animate attributeName="fill" values="#ffd86b;#00a8e8;#ffd86b" dur="4s" repeatCount="indefinite"/></rect>
+    </g>
+    <!-- title -->
+    <g font-family="Vazirmatn, 'Segoe UI', Tahoma, Arial, sans-serif" text-anchor="middle">
+      <text x="540" y="132" font-size="66" font-weight="800" fill="url(#ttl)">Dorm Hub
+        <animate attributeName="opacity" values="0;1" dur="1.2s" fill="freeze"/></text>
+      <text x="540" y="182" font-size="40" font-weight="700" fill="#ffffff" direction="rtl" unicode-bidi="bidi-override">خوابگاه‌یار
+        <animate attributeName="opacity" values="0;0;1" keyTimes="0;.4;1" dur="1.8s" fill="freeze"/></text>
+      <text x="540" y="222" font-size="17" fill="#b9b6ff" letter-spacing="1">Shared expenses · Group chat · Voice &amp; video calls · Screen share
+        <animate attributeName="opacity" values="0;0;1" keyTimes="0;.6;1" dur="2.4s" fill="freeze"/></text>
+    </g>
+  </g>
+</svg>

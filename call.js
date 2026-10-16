@@ -284,12 +284,12 @@ function openUI() {
   el.innerHTML = `<div class="ctop"><div><b id="ctitle"></b><small id="ctimer">00:00</small></div><button class="cbtn sm" id="cmin" title="کوچک‌کردن">▾</button></div>
     <div class="cgrid" id="cgrid"></div>
     <div class="cbar"><button class="cbtn" id="cmic" title="میکروفون">🎙</button><button class="cbtn" id="ccam" title="دوربین">🎥</button>
-    ${canShare ? '<button class="cbtn" id="cscr" title="اشتراک صفحه">🖥</button>' : ''}<button class="cbtn end" id="cend" title="پایان تماس">📞</button></div>`;
+    <button class="cbtn" id="cscr" title="اشتراک صفحه">🖥</button><button class="cbtn end" id="cend" title="پایان تماس">📞</button></div>`;
   document.body.appendChild(el);
   $('#ctitle').textContent = call.title || 'تماس';
   $('#cmic').onclick = toggleMic;
   $('#ccam').onclick = toggleCam;
-  if (canShare) $('#cscr').onclick = toggleScreen;
+  $('#cscr').onclick = canShare ? toggleScreen : () => A().toast('مرورگرهای گوشی اجازه‌ی اشتراک صفحه نمی‌دهند. برای اشتراک از لپ‌تاپ/کامپیوتر وارد شوید؛ دیدن صفحه‌ی بقیه روی گوشی کار می‌کند.', 'err');
   $('#cend').onclick = () => cleanup(true);
   $('#cmin').onclick = () => { el.classList.toggle('mini'); $('#cmin').textContent = el.classList.contains('mini') ? '▴' : '▾'; };
   updateBar();
@@ -325,9 +325,16 @@ function syncTiles() {
       t = document.createElement('div');
       t.className = 'tile' + (w.screen ? ' screen' : '') + (w.mine ? ' mine' : '');
       t.dataset.id = w.id;
-      t.innerHTML = `<video autoplay playsinline muted></video><div class="ph">${A().avatar({ id: w.uid, display_name: w.name }, 'lg')}</div><div class="nm"><span class="mi"></span><span class="tn"></span></div>`;
+      t.innerHTML = `<video autoplay playsinline muted></video><div class="ph">${A().avatar({ id: w.uid, display_name: w.name }, 'lg')}</div><div class="nm"><span class="mi"></span><span class="tn"></span></div>${w.screen ? '<button class="fs" title="تمام‌صفحه">⛶</button>' : ''}`;
       t.querySelector('video').srcObject = w.stream;
       t.querySelector('.tn').textContent = w.name;
+      const fs = t.querySelector('.fs');
+      if (fs) fs.onclick = (ev) => {
+        ev.stopPropagation();
+        const v = t.querySelector('video');
+        const f = v.requestFullscreen || v.webkitRequestFullscreen || v.webkitEnterFullscreen;
+        if (f) { try { const r = f.call(v); if (r && r.catch) r.catch(() => {}); } catch (_) {} }
+      };
       t.onclick = () => setPin(grid.dataset.pin === w.id ? null : w.id);
       grid.appendChild(t);
       if (w.screen && !grid.dataset.pin) setPin(w.id);

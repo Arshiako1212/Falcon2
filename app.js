@@ -21,7 +21,7 @@ const state = {
   groups: [], dms: [], debts: [], notifs: [], search: null,
   active: null, tab: 'chat', messages: [], group: null, peer: null, expenses: [], socket: null,
 };
-const auth = { mode: 'phone', phone: '' };
+const auth = { mode: 'login' };
 
 async function api(path, opts = {}) {
   const r = await fetch('/api' + path, {
@@ -50,21 +50,12 @@ $('#modal').addEventListener('mousedown', (e) => { if (e.target.id === 'modal') 
 function renderAuth() {
   const m = auth.mode;
   let inner = '';
-  const tabs = `<div class="seg"><button data-act="auth-mode" data-m="phone" class="${m === 'phone' || m === 'code' ? 'on' : ''}">با شماره موبایل</button>
-    <button data-act="auth-mode" data-m="login" class="${m === 'login' || m === 'register' ? 'on' : ''}">با آیدی</button></div>`;
-  if (m === 'phone') inner = `${tabs}<form data-form="phone" style="display:grid;gap:12px">
-    <label>شماره موبایل<input name="phone" class="ltr" inputmode="tel" placeholder="09123456789" required autofocus></label>
-    <button class="btn primary">دریافت کد تأیید</button></form>`;
-  else if (m === 'code') inner = `<p>کد ارسال‌شده به <b class="ltr">${esc(auth.phone)}</b> را وارد کنید</p>
-    <form data-form="code" style="display:grid;gap:12px"><input name="code" class="code-in" inputmode="numeric" maxlength="6" placeholder="••••••" required autofocus>
-    <button class="btn primary">ورود</button></form>
-    <div style="display:flex;justify-content:space-between"><button class="link" data-act="auth-mode" data-m="phone">تغییر شماره</button><button class="link" data-act="resend">ارسال مجدد کد</button></div>`;
-  else if (m === 'login') inner = `${tabs}<form data-form="login" style="display:grid;gap:12px">
-    <label>آیدی یا شماره<input name="identifier" class="ltr" autocomplete="username" required autofocus></label>
+  if (m === 'login') inner = `<form data-form="login" style="display:grid;gap:12px">
+    <label>آیدی<input name="identifier" class="ltr" autocomplete="username" required autofocus></label>
     <label>رمز عبور<input name="password" type="password" autocomplete="current-password" required></label>
     <button class="btn primary">ورود</button></form>
-    <button class="link" data-act="auth-mode" data-m="register">حساب ندارید؟ ثبت‌نام بدون شماره</button>`;
-  else if (m === 'register') inner = `${tabs}<form data-form="register" style="display:grid;gap:12px">
+    <button class="link" data-act="auth-mode" data-m="register">حساب ندارید؟ ثبت‌نام</button>`;
+  else if (m === 'register') inner = `<form data-form="register" style="display:grid;gap:12px">
     <label>نام<input name="display_name" maxlength="40" required autofocus></label>
     <label>آیدی (انگلیسی)<input name="username" class="ltr" id="reg-un" maxlength="20" placeholder="ali_123" required autocomplete="username"><span class="hint" id="un-hint"></span></label>
     <label>رمز عبور (حداقل ۶ کاراکتر)<input name="password" type="password" minlength="6" required autocomplete="new-password"></label>
@@ -74,7 +65,7 @@ function renderAuth() {
     <form data-form="setup" style="display:grid;gap:12px">
     <label>نام<input name="display_name" maxlength="40" required autofocus value="${esc(state.me?.display_name === 'کاربر جدید' ? '' : state.me?.display_name || '')}"></label>
     <label>آیدی یکتا<input name="username" class="ltr" id="reg-un" maxlength="20" placeholder="ali_123" required><span class="hint" id="un-hint"></span></label>
-    <label>رمز عبور (اختیاری، برای ورود بدون پیامک)<input name="password" type="password" autocomplete="new-password"></label>
+    <label>رمز عبور (حداقل ۶ کاراکتر)<input name="password" type="password" minlength="6" required autocomplete="new-password"></label>
     <button class="btn primary">شروع</button></form>`;
   $('#app').innerHTML = `<div class="auth"><div class="auth-card"><div class="logo">🏠</div><h1>خوابگاه‌یار</h1>
     <p>هزینه‌های مشترک، گروه و چت؛ همه در یک‌جا</p>${inner}<div class="notice">${NOTICE}</div></div></div>`;
@@ -119,17 +110,11 @@ function logout() {
   localStorage.removeItem('token');
   if (state.socket) state.socket.disconnect();
   Object.assign(state, { token: null, me: null, active: null, groups: [], dms: [], debts: [], notifs: [], search: null, view: 'chats' });
-  auth.mode = 'phone'; closeModal(); renderAuth();
+  auth.mode = 'login'; closeModal(); renderAuth();
 }
 
 /* ---------- forms ---------- */
 const forms = {
-  async phone(f) {
-    const r = await api('/auth/otp/request', { method: 'POST', body: { phone: f.phone.value } });
-    auth.phone = f.phone.value; auth.mode = 'code'; renderAuth();
-    if (r.devCode) toast('کد آزمایشی: ' + r.devCode, 'ok'); else toast('کد تأیید ارسال شد', 'ok');
-  },
-  async code(f) { setSession(await api('/auth/otp/verify', { method: 'POST', body: { phone: auth.phone, code: toEn(f.code.value) } })); },
   async login(f) { setSession(await api('/auth/login', { method: 'POST', body: { identifier: toEn(f.identifier.value), password: f.password.value } })); },
   async register(f) { setSession(await api('/auth/register', { method: 'POST', body: { display_name: f.display_name.value, username: f.username.value, password: f.password.value } })); },
   async setup(f) {
@@ -185,7 +170,6 @@ document.addEventListener('submit', async (e) => {
 /* ---------- actions ---------- */
 const acts = {
   'auth-mode': (el) => { auth.mode = el.dataset.m; renderAuth(); },
-  async resend() { try { const r = await api('/auth/otp/request', { method: 'POST', body: { phone: auth.phone } }); toast(r.devCode ? 'کد آزمایشی: ' + r.devCode : 'کد دوباره ارسال شد', 'ok'); } catch (e) { toast(e.message, 'err'); } },
   view(el) { state.view = el.dataset.v; state.search = null; const s = $('#search-in'); if (s) s.value = ''; renderSide(); if (state.view === 'notifs') markNotifsRead(); },
   'open-chat': (el) => openChat(el.dataset.type, +el.dataset.id),
   'open-debt': async (el) => { await openChat('group', +el.dataset.id); setTab('expenses'); },
@@ -220,7 +204,7 @@ async function call(fn, okMsg) { try { await fn(); toast(okMsg, 'ok'); await ref
 async function remind(uid) {
   try {
     const r = await api(`/groups/${state.active.id}/remind`, { method: 'POST', body: uid ? { user_id: uid } : {} });
-    toast(r.reminded ? `یادآوری برای ${fa(r.reminded)} نفر ارسال شد (پیامک + اعلان)` : 'موردی برای یادآوری نبود (یا به‌تازگی یادآوری شده)', r.reminded ? 'ok' : '');
+    toast(r.reminded ? `یادآوری برای ${fa(r.reminded)} نفر ارسال شد (اعلان داخل برنامه)` : 'موردی برای یادآوری نبود (یا به‌تازگی یادآوری شده)', r.reminded ? 'ok' : '');
   } catch (e) { toast(e.message, 'err'); }
 }
 document.addEventListener('click', (e) => {

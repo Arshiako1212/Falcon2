@@ -14,9 +14,13 @@ app.use('/api/auth', require('./auth'));
 app.use('/api', lib.authRequired, require('./api'));
 
 app.use('/admin/api', require('./admin'));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
-app.use(express.static(path.join(__dirname, 'public')));
+// All files live in one flat folder, so ONLY these front-end files are public
+// (the server .js files next to them must never be served).
+const PUBLIC_FILES = ['index.html', 'style.css', 'app.js', 'call.js'];
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+for (const f of PUBLIC_FILES) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, f)));
 
 const server = http.createServer(app);
 const io = new Server(server);
@@ -37,13 +41,23 @@ io.use(async (socket, next) => {
 io.on('connection', (socket) => socket.join('user:' + socket.userId));
 require('./calls').attach(io);
 
+process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e));
+process.on('uncaughtException', (e) => console.error('[uncaughtException]', e));
+
+// Listen FIRST so the Railway domain always answers, then prepare the database (with retries).
 const PORT = process.env.PORT || 3000;
-init()
-  .then(() => {
-    server.listen(PORT, '0.0.0.0', () => console.log('[server] listening on', PORT));
-    require('./reminders').start();
-  })
-  .catch((e) => {
-    console.error('[server] failed to start:', e.message);
-    process.exit(1);
-  });
+server.listen(PORT, '0.0.0.0', () => console.log('[server] listening on', PORT));
+
+(async function boot() {
+  for (let i = 1; i <= 20; i++) {
+    try {
+      await init();
+      require('./reminders').start();
+      return;
+    } catch (e) {
+      console.error(`[db] init failed (try ${i}/20):`, e.message);
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+  console.error('[server] database never became ready; check DATABASE_URL');
+})();

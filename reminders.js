@@ -1,16 +1,10 @@
-// Automatic daily reminders: unpaid shares older than 24h -> in-app + SMS (once per user per run)
+// Automatic daily reminders: unpaid shares older than 24h -> in-app notification (once per user per run)
 const { pool } = require('./db');
 const { notifyUser } = require('./lib');
 
 const fa = (n) => Number(n).toLocaleString('fa-IR');
 
-function tehranHour() {
-  return +new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Tehran', hour: 'numeric', hour12: false }).format(new Date()) % 24;
-}
-
 async function run() {
-  const h = tehranHour();
-  if (h < 9 || h >= 21) return; // no SMS at night
   const { rows } = await pool.query(
     `SELECT s.id,s.user_id,s.amount,g.name AS group_name
      FROM expense_shares s JOIN expenses e ON e.id=s.expense_id JOIN groups g ON g.id=e.group_id
@@ -28,7 +22,7 @@ async function run() {
       await notifyUser(
         uid,
         `یادآوری: ${fa(o.n)} پرداخت معوق به مجموع ${fa(o.sum)} تومان در گروه «${[...o.groups].join('، ')}» دارید.`,
-        { sms: true }
+        {}
       );
       await pool.query('UPDATE expense_shares SET last_reminded_at=now() WHERE id=ANY($1::int[])', [o.ids]);
     } catch (e) {

@@ -48,7 +48,7 @@ router.get('/stats', wrap(async (req, res) => {
 
 router.get('/users', wrap(async (req, res) => {
   const { rows } = await q(`
-    SELECT u.id,u.username,u.display_name,u.phone,u.is_blocked,u.last_seen,u.created_at,
+    SELECT u.id,u.username,u.display_name,u.is_blocked,u.last_seen,u.created_at,
       (SELECT count(*) FROM group_members gm WHERE gm.user_id=u.id)::int AS groups,
       (SELECT count(*) FROM messages m WHERE m.from_user_id=u.id)::int AS messages,
       COALESCE((SELECT sum(amount) FROM expense_shares s WHERE s.user_id=u.id AND s.status<>'paid'),0)::bigint AS owed,
@@ -64,7 +64,7 @@ const MSG_SQL = `SELECT m.id,m.group_id,g.name AS group_name,m.from_user_id,fu.u
 
 router.get('/users/:id', wrap(async (req, res) => {
   const id = intParam(req.params.id);
-  const u = id && (await q('SELECT id,username,display_name,phone,is_blocked,last_seen,created_at FROM users WHERE id=$1', [id])).rows[0];
+  const u = id && (await q('SELECT id,username,display_name,is_blocked,last_seen,created_at FROM users WHERE id=$1', [id])).rows[0];
   if (!u) return res.status(404).json({ error: 'کاربر پیدا نشد' });
   const groups = (await q(
     `SELECT g.id,g.name,gm.role FROM group_members gm JOIN groups g ON g.id=gm.group_id WHERE gm.user_id=$1`, [id])).rows;

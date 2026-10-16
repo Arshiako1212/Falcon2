@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 56" width="900" height="56" role="img" aria-label="features">
+  <g font-family="Vazirmatn, 'Segoe UI', Tahoma, Arial, sans-serif" font-size="24" font-weight="700" text-anchor="middle" fill="#7c5cff">
+    <text x="450" y="36" opacity="0">💸 هزینه‌های مشترک بدون دعوا
+      <animate attributeName="opacity" values="0;1;1;0;0;0;0;0;0;0;0;0" dur="12s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="46;36;36;26;26;26;26;26;26;26;26;46" dur="12s" repeatCount="indefinite"/></text>
+    <text x="450" y="36" opacity="0" fill="#00a8e8">💬 چت گروهی و خصوصی لحظه‌ای
+      <animate attributeName="opacity" values="0;0;0;0;1;1;0;0;0;0;0;0" dur="12s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="46;46;46;46;36;36;26;26;26;26;26;46" dur="12s" repeatCount="indefinite"/></text>
+    <text x="450" y="36" opacity="0" fill="#ff5c9a">📞 تماس صوتی و تصویری گروهی
+      <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0;0;0" dur="12s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="46;46;46;46;46;46;46;36;36;26;26;46" dur="12s" repeatCount="indefinite"/></text>
+    <text x="450" y="36" opacity="0" fill="#1fb384">🖥 اشتراک صفحه برای همه
+      <animate attributeName="opacity" values="0;0;0;0;0;0;0;0;0;0;1;0" dur="12s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="46;46;46;46;46;46;46;46;46;46;36;26" dur="12s" repeatCount="indefinite"/></text>
+  </g>
+</svg>
